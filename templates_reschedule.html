@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Reagendar sua {{ EVENT_TITLE }} — {{ BRAND_NAME }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#F0C882; --gold-deep:#C9971F; --gold-text:#8A6410;
+  --teal:#2A9D8F; --teal-deep:#1D6F64;
+  --ink:#0F0F0F; --surface:#FFFFFF; --dark:#121212; --muted:#5B5B5B;
+  --line:#E7E4DE; --card:#FBFAF7;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--surface);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto;padding:0 20px}
+.topbar{background:var(--dark);padding:18px 0}
+.topbar .wrap{display:flex;align-items:center;gap:12px}
+.topbar img{height:30px;width:auto;display:block}
+.topbar .badge{margin-left:auto;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(240,200,130,.4);padding:5px 12px;border-radius:999px;font-weight:600}
+.hero{background:var(--dark);color:#fff;padding:38px 0 50px;text-align:center}
+.hero .kicker{color:#5CC4B6;font-weight:600;font-size:13px;letter-spacing:.06em;margin-bottom:14px}
+.hero h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:clamp(26px,6.5vw,38px);line-height:1.14;color:#fff;margin-bottom:14px}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{color:#D8D5CF;font-size:16px;max-width:460px;margin:0 auto}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;margin:-26px auto 0;padding:26px 22px}
+.cur{background:#fff;border:1px dashed var(--gold-text);border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:14px}
+.cur b{color:var(--gold-text)}
+.step-label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-text);margin-bottom:6px}
+.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin-bottom:14px}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;-webkit-overflow-scrolling:touch}
+.day{flex:0 0 auto;min-width:64px;text-align:center;cursor:pointer;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px 8px;transition:all .15s}
+.day:hover{border-color:var(--gold-deep)}
+.day.active{background:var(--ink);border-color:var(--ink)}
+.day.active .dw,.day.active .dd,.day.active .dm{color:#fff}
+.day .dw{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.day .dd{font-size:20px;font-weight:700;color:var(--ink);line-height:1.2}
+.day .dm{font-size:11px;color:var(--muted);text-transform:uppercase}
+.times{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px;margin-bottom:8px}
+.slot{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:12px 6px;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;text-align:center;transition:all .12s;font-family:inherit}
+.slot:hover{border-color:var(--teal);color:var(--teal)}
+.slot.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.empty{color:var(--muted);font-size:14px;padding:14px 0;text-align:center}
+.summary{background:#fff;border:1px dashed var(--gold-text);border-radius:12px;padding:14px 16px;margin:16px 0;font-size:14px;display:none}
+.summary.show{display:block}.summary b{color:var(--gold-text)}
+.btn{width:100%;background:var(--ink);color:var(--gold);border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn:hover{background:#000}.btn:disabled{background:#E3E0D9;color:#8B877E;cursor:not-allowed}
+.msg{font-size:14px;margin-top:12px;text-align:center}.msg.err{color:#a4322a}
+.done{text-align:center;padding:10px 0}
+.done .ok{width:58px;height:58px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
+.done h2{font-family:'Fraunces',serif;font-weight:600;font-size:24px;margin-bottom:8px}
+.done p{color:var(--muted);font-size:15px;margin-bottom:6px}
+.notice{text-align:center;padding:30px 0;color:var(--muted)}
+.notice h2{font-family:'Fraunces',serif;color:var(--ink);font-size:22px;margin-bottom:8px}
+footer{background:var(--dark);color:#B8B5AF;padding:34px 0 40px;margin-top:44px;text-align:center}
+footer img{height:26px;margin-bottom:14px;opacity:.95}
+footer .cnpj{font-size:12.5px;color:#8F8C86;line-height:1.7}
+footer a{color:var(--gold);text-decoration:none;font-weight:600}
+footer .tag{font-size:13px;color:#C8C5BF;margin-bottom:10px}
+.loading{text-align:center;color:var(--muted);padding:20px 0;font-size:14px}
+.cancel-row{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);text-align:center;font-size:13.5px;color:var(--muted)}
+.cancel-row span{display:block;margin-bottom:8px}
+.cancel-link{background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;color:#a4322a;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px 6px}
+.cancel-link:hover{color:#7d251e}
+.cancel-link:disabled{color:#b9a29f;cursor:not-allowed;text-decoration:none}
+.done .ok.cancel{background:#a4322a}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <img src="/static/logo.png" alt="{{ BRAND_NAME }}">
+    <span class="badge">Reagendamento</span>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">{{ BRAND_NAME }}</div>
+    <h1>Reagende sua <em>{{ EVENT_TITLE }}</em></h1>
+    <p>Escolha um novo horário livre. O anterior fica liberado automaticamente.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="panel" id="panel">
+  {% if invalid %}
+    <div class="notice">
+      <h2>Link inválido</h2>
+      <p>Este link de reagendamento não é válido. Fale com a gente no WhatsApp que resolvemos.</p>
+    </div>
+  {% elif cancelled %}
+    <div class="notice">
+      <h2>Agendamento não está ativo</h2>
+      <p>Este agendamento foi cancelado. Para marcar de novo, use o link de agendamento ou fale conosco.</p>
+    </div>
+  {% else %}
+    <div class="cur">{% if name %}Oi, {{ name }}! {% endif %}Seu horário atual é <b>{{ cur_when }}</b>. Escolha outro abaixo.</div>
+
+    <div class="step-label">Escolha o dia</div>
+    <div class="section-title">Dias disponíveis</div>
+    <div class="days" id="days"><div class="loading">Carregando horários…</div></div>
+
+    <div class="step-label">Escolha o horário</div>
+    <div class="times" id="times"><div class="empty">Selecione um dia acima.</div></div>
+
+    <div class="summary" id="summary"></div>
+    <button class="btn" id="submit" disabled>Confirmar novo horário</button>
+    <div class="msg" id="msg"></div>
+
+    <div class="cancel-row">
+      <span>Não vai mais poder participar?</span>
+      <button type="button" class="cancel-link" id="cancelBtn">Cancelar agendamento</button>
+    </div>
+    <div class="msg" id="cancelMsg"></div>
+  {% endif %}
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <img src="/static/logo.png" alt="{{ BRAND_NAME }}">
+    <div class="tag">{{ BRAND_NAME }}</div>
+    <div class="cnpj">
+      {# Edite este rodape com os dados da SUA empresa (razao social, CNPJ, endereco). #}
+      {{ BRAND_NAME }}
+      {% if BRAND_WA_LINK %}<br><a href="{{ BRAND_WA_LINK }}" target="_blank" rel="noopener">Falar no WhatsApp</a>{% endif %}
+    </div>
+  </div>
+</footer>
+
+{% if not invalid and not cancelled %}
+<script>
+const TOKEN = {{ token|tojson }};
+let DAYS={}, selDay=null, selSlot=null, selIso=null;
+const WD=['dom','seg','ter','qua','qui','sex','sáb'];
+const MO=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+function fmtDate(ds){const [y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);
+  return {wd:WD[dt.getDay()],dd:String(d).padStart(2,'0'),mo:MO[m-1]};}
+
+async function load(){
+  const r=await fetch('/api/reagendar/'+TOKEN+'/slots');
+  const j=await r.json(); DAYS=j.days||{};
+  const keys=Object.keys(DAYS).filter(k=>DAYS[k].length);
+  const daysEl=document.getElementById('days');
+  if(!keys.length){daysEl.innerHTML='<div class="empty">Sem horários abertos no momento. Tente novamente em breve.</div>';
+    document.getElementById('times').innerHTML='';return;}
+  daysEl.innerHTML='';
+  keys.forEach((k,i)=>{const f=fmtDate(k);const el=document.createElement('div');
+    el.className='day'+(i===0?' active':'');
+    el.innerHTML=`<div class="dw">${f.wd}</div><div class="dd">${f.dd}</div><div class="dm">${f.mo}</div>`;
+    el.onclick=()=>pickDay(k,el);daysEl.appendChild(el);});
+  pickDay(keys[0], daysEl.firstChild);
+}
+function pickDay(k,el){selDay=k;selSlot=null;selIso=null;
+  document.querySelectorAll('.day').forEach(d=>d.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const t=document.getElementById('times');t.innerHTML='';
+  DAYS[k].forEach(s=>{const b=document.createElement('button');b.className='slot';b.type='button';
+    b.textContent=s.time;b.onclick=()=>pickSlot(s,b);t.appendChild(b);});
+  updateSummary();}
+function pickSlot(s,el){selSlot=s.time;selIso=s.iso_start;
+  document.querySelectorAll('.slot').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');updateSummary();}
+function updateSummary(){const btn=document.getElementById('submit');const sum=document.getElementById('summary');
+  if(selIso&&selDay){const f=fmtDate(selDay);
+    sum.innerHTML=`Novo horário: <b>${f.dd} ${f.mo}</b> às <b>${selSlot}</b> · {{ EVENT_TITLE }} (Google Meet).`;
+    sum.classList.add('show');}else{sum.classList.remove('show');}
+  btn.disabled=!selIso;}
+document.getElementById('submit').onclick=async()=>{
+  const btn=document.getElementById('submit');const msg=document.getElementById('msg');
+  btn.disabled=true;btn.textContent='Reagendando…';msg.className='msg';msg.textContent='';
+  try{
+    const r=await fetch('/api/reagendar/'+TOKEN,{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({iso_start:selIso})});
+    const j=await r.json();
+    if(!j.ok){msg.className='msg err';msg.textContent=j.error||'Não foi possível reagendar.';
+      btn.disabled=false;btn.textContent='Confirmar novo horário';load();return;}
+    showDone(j);
+  }catch(e){msg.className='msg err';msg.textContent='Erro de conexão. Tente novamente.';
+    btn.disabled=false;btn.textContent='Confirmar novo horário';}
+};
+function showDone(j){
+  document.getElementById('panel').innerHTML=`
+    <div class="done">
+      <div class="ok">✓</div>
+      <h2>Horário atualizado!</h2>
+      <p>Sua {{ EVENT_TITLE }} foi reagendada para</p>
+      <p style="color:var(--ink);font-weight:600;font-size:17px">${j.new_when}</p>
+      <p>Enviamos a confirmação do novo horário pra você.</p>
+    </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('cancelBtn').onclick=async()=>{
+  const cmsg=document.getElementById('cancelMsg');
+  if(!confirm('Tem certeza que deseja cancelar sua {{ EVENT_TITLE }}? Esta ação não pode ser desfeita.'))return;
+  const cbtn=document.getElementById('cancelBtn');
+  cbtn.disabled=true;cbtn.textContent='Cancelando…';cmsg.className='msg';cmsg.textContent='';
+  try{
+    const r=await fetch('/api/cancelar/'+TOKEN,{method:'POST',
+      headers:{'Content-Type':'application/json'},body:'{}'});
+    const j=await r.json();
+    if(!j.ok){cmsg.className='msg err';cmsg.textContent=j.error||'Não foi possível cancelar.';
+      cbtn.disabled=false;cbtn.textContent='Cancelar agendamento';return;}
+    showCancelled();
+  }catch(e){cmsg.className='msg err';cmsg.textContent='Erro de conexão. Tente novamente.';
+    cbtn.disabled=false;cbtn.textContent='Cancelar agendamento';}
+};
+function showCancelled(){
+  document.getElementById('panel').innerHTML=`
+    <div class="done">
+      <div class="ok cancel">✕</div>
+      <h2>Agendamento cancelado</h2>
+      <p>Sua {{ EVENT_TITLE }} foi cancelada.</p>
+      <p>Se mudar de ideia, fale com a gente no WhatsApp que remarcamos num instante.</p>
+    </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+load();
+</script>
+{% endif %}
+</body>
+</html>

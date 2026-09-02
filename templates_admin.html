@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · Agendamentos</title>
+<style>
+:root{--gold:#C9971F;--teal:#2A9D8F;--ink:#0F0F0F;--muted:#5B5B5B;--line:#E7E4DE;--card:#FBFAF7}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#F4F2EE;padding:24px 16px}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:22px;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+.status{display:inline-block;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:20px}
+.status.ok{background:#e6f4f1;color:#1d6f64;border:1px solid #bfe3dc}
+.status.bad{background:#fdeceb;color:#a4322a;border:1px solid #f3c9c5}
+.status a{color:#a4322a;font-weight:700}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px -18px rgba(0,0,0,.3)}
+th,td{text-align:left;padding:11px 12px;font-size:13.5px;border-bottom:1px solid var(--line)}
+th{background:var(--card);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+.pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px}
+.pill.p{background:#eef6f4;color:#1d6f64}
+.pill.t{background:#fff4e0;color:#8a6410}
+.pill.cancel{background:#f3f3f3;color:#999}
+.meet{color:var(--teal);font-weight:600;text-decoration:none}
+.del{background:none;border:1px solid var(--line);color:#a4322a;border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer}
+.del:hover{background:#fdeceb}
+.resc{background:none;border:1px solid var(--line);color:var(--teal);border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;margin-right:6px}
+.resc:hover{background:#e6f4f1}
+.acts{display:flex;align-items:center}
+.acts form{display:inline}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.cancelled{opacity:.5}
+/* modal reagendar */
+.overlay{position:fixed;inset:0;background:rgba(15,15,15,.55);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;overflow:auto}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:520px;width:100%;padding:22px;box-shadow:0 20px 60px -20px rgba(0,0,0,.5)}
+.modal h3{font-size:18px;margin-bottom:4px}
+.modal .who{color:var(--muted);font-size:13px;margin-bottom:14px}
+.modal .close{float:right;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--muted)}
+.m-days{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px}
+.m-day{flex:0 0 auto;min-width:58px;text-align:center;cursor:pointer;border:1.5px solid var(--line);border-radius:10px;padding:8px 6px}
+.m-day.active{background:var(--ink);color:#fff}
+.m-day .dw{font-size:10px;text-transform:uppercase;color:inherit;opacity:.8}
+.m-day .dd{font-size:18px;font-weight:700}
+.m-day .dm{font-size:10px;text-transform:uppercase;opacity:.8}
+.m-times{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;margin-bottom:14px}
+.m-slot{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:10px 4px;font-size:14px;font-weight:600;cursor:pointer;text-align:center}
+.m-slot.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.m-empty{color:var(--muted);font-size:13px;padding:10px 0}
+.m-go{width:100%;background:var(--ink);color:var(--gold);border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+.m-go:disabled{background:#E3E0D9;color:#8B877E;cursor:not-allowed}
+.m-msg{font-size:13px;margin-top:10px;text-align:center}
+.m-msg.err{color:#a4322a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Agendamentos · {{ EVENT_TITLE }}</h1>
+  <div class="sub">Painel administrativo — {{ BRAND_NAME }}</div>
+
+  {% if cal_ok %}
+    <div class="status ok">✓ Google Agenda conectado — eventos com Meet estão sendo criados.</div>
+  {% else %}
+    <div class="status bad">⚠ Google Agenda desconectado. Agendamentos ficam salvos, mas sem evento/Meet.
+      &nbsp;<a href="{{ reauth_url }}">Reconectar agora →</a></div>
+  {% endif %}
+
+  {% if rows %}
+  <table>
+    <thead><tr>
+      <th>Quando</th><th>Nome</th><th>Contato</th><th>Parceiro</th><th>Meet</th><th></th>
+    </tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr class="{{ 'cancelled' if r['status']=='cancelled' else '' }}">
+        <td>{{ r['slot_start'][8:10] }}/{{ r['slot_start'][5:7] }} {{ r['slot_start'][11:16] }}</td>
+        <td>{{ r['name'] }}
+          {% if r['is_test'] %}<span class="pill t">teste</span>{% endif %}
+          {% if r['status']=='cancelled' %}<span class="pill cancel">cancelado</span>{% endif %}
+        </td>
+        <td>{{ r['email'] }}{% if r['phone'] %}<br>{{ r['phone'] }}{% endif %}</td>
+        <td><span class="pill p">{{ r['partner'] or 'direto' }}</span></td>
+        <td>{% if r['meet_link'] %}<a class="meet" href="{{ r['meet_link'] }}" target="_blank">Meet</a>{% else %}—{% endif %}</td>
+        <td>
+          {% if r['status']!='cancelled' %}
+          <div class="acts">
+            <button class="resc" type="button"
+              onclick="openResc({{ r['id'] }}, {{ r['name']|tojson }}, {{ (r['slot_start'][8:10] ~ '/' ~ r['slot_start'][5:7] ~ ' ' ~ r['slot_start'][11:16])|tojson }})">Reagendar</button>
+            <form method="post" action="/admin/delete/{{ r['id'] }}" onsubmit="return confirm('Cancelar este agendamento?')">
+              <button class="del" type="submit">Cancelar</button>
+            </form>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div class="empty">Nenhum agendamento ainda.</div>
+  {% endif %}
+</div>
+
+<!-- modal reagendar -->
+<div class="overlay" id="ov">
+  <div class="modal">
+    <button class="close" type="button" onclick="closeResc()">&times;</button>
+    <h3>Reagendar apresentação</h3>
+    <div class="who" id="rWho"></div>
+    <div class="m-days" id="rDays"><div class="m-empty">Carregando horários…</div></div>
+    <div class="m-times" id="rTimes"><div class="m-empty">Selecione um dia.</div></div>
+    <button class="m-go" id="rGo" disabled onclick="doResc()">Confirmar novo horário</button>
+    <div class="m-msg" id="rMsg"></div>
+  </div>
+</div>
+
+<script>
+const WD=['dom','seg','ter','qua','qui','sex','sáb'];
+const MO=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+let rBid=null, rDays={}, rDay=null, rIso=null;
+
+function fmtDate(ds){const [y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);
+  return {wd:WD[dt.getDay()],dd:String(d).padStart(2,'0'),mo:MO[m-1]};}
+
+async function openResc(bid, name, curWhen){
+  rBid=bid; rDay=null; rIso=null;
+  document.getElementById('rWho').textContent = `${name} · atual: ${curWhen}`;
+  document.getElementById('rMsg').textContent = '';
+  document.getElementById('rGo').disabled = true;
+  document.getElementById('rDays').innerHTML='<div class="m-empty">Carregando horários…</div>';
+  document.getElementById('rTimes').innerHTML='<div class="m-empty">Selecione um dia.</div>';
+  document.getElementById('ov').classList.add('show');
+  const r = await fetch('/api/slots/'+bid);
+  const j = await r.json();
+  rDays = j.days || {};
+  const keys = Object.keys(rDays).filter(k=>rDays[k].length);
+  const el = document.getElementById('rDays');
+  if(!keys.length){ el.innerHTML='<div class="m-empty">Sem horários livres no momento.</div>';
+    document.getElementById('rTimes').innerHTML=''; return; }
+  el.innerHTML='';
+  keys.forEach((k,i)=>{const f=fmtDate(k);const d=document.createElement('div');
+    d.className='m-day'+(i===0?' active':'');
+    d.innerHTML=`<div class="dw">${f.wd}</div><div class="dd">${f.dd}</div><div class="dm">${f.mo}</div>`;
+    d.onclick=()=>pickDay(k,d); el.appendChild(d);});
+  pickDay(keys[0], el.firstChild);
+}
+
+function pickDay(k,el){ rDay=k; rIso=null;
+  document.querySelectorAll('.m-day').forEach(x=>x.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('rGo').disabled=true;
+  const t=document.getElementById('rTimes'); t.innerHTML='';
+  rDays[k].forEach(s=>{const b=document.createElement('button');b.type='button';
+    b.className='m-slot';b.textContent=s.time;b.onclick=()=>pickSlot(s,b);t.appendChild(b);});}
+
+function pickSlot(s,el){ rIso=s.iso_start;
+  document.querySelectorAll('.m-slot').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active'); document.getElementById('rGo').disabled=false;}
+
+async function doResc(){
+  if(!rIso||!rBid) return;
+  const go=document.getElementById('rGo'); const msg=document.getElementById('rMsg');
+  go.disabled=true; go.textContent='Reagendando…'; msg.className='m-msg'; msg.textContent='';
+  try{
+    const r=await fetch('/admin/reschedule/'+rBid,{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({iso_start:rIso})});
+    const j=await r.json();
+    if(!j.ok){ msg.className='m-msg err'; msg.textContent=j.error||'Não foi possível reagendar.';
+      go.disabled=false; go.textContent='Confirmar novo horário'; return; }
+    msg.textContent='Reagendado! Atualizando…';
+    setTimeout(()=>location.reload(),700);
+  }catch(e){ msg.className='m-msg err'; msg.textContent='Erro de conexão.';
+    go.disabled=false; go.textContent='Confirmar novo horário'; }
+}
+
+function closeResc(){ document.getElementById('ov').classList.remove('show'); }
+document.getElementById('ov').addEventListener('click',e=>{if(e.target.id==='ov')closeResc();});
+</script>
+</body>
+</html>

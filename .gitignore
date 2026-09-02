@@ -1,0 +1,20 @@
+# Segredos e ambiente
+.env
+
+# Dados em runtime (nunca versionar)
+data/*.json
+!data/*.example.json
+data/*.db
+data/*.db-*
+data/*.flag
+
+# Tokens OAuth
+data/calendar_token*.json
+
+# Runtime
+venv/
+__pycache__/
+*.pyc
+logs/
+*.pid
+app.pid

@@ -1,0 +1,22 @@
+[Unit]
+Description=Agendador (agendamento de eventos com Google Meet)
+After=network.target
+
+[Service]
+Type=simple
+# TROQUE __USER__ pelo usuario do sistema que roda o servico (ex: o dono da app).
+User=__USER__
+# TROQUE __INSTALL_DIR__ pela pasta onde o pacote foi instalado (ex: /opt/agendador).
+WorkingDirectory=__INSTALL_DIR__
+# Carrega o .env (Client ID/Secret, marca, admin, WhatsApp opcional etc).
+EnvironmentFile=__INSTALL_DIR__/.env
+Environment=OAUTHLIB_INSECURE_TRANSPORT=1
+Environment=OAUTHLIB_RELAX_TOKEN_SCOPE=1
+# Porta local (o reverse proxy encaminha pra ca). Ajuste se mudar PORT no .env.
+ExecStart=__INSTALL_DIR__/venv/bin/python3 __INSTALL_DIR__/app.py 5120
+Restart=always
+RestartSec=5
+MemoryMax=200M
+
+[Install]
+WantedBy=multi-user.target
